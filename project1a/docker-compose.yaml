@@ -1,1 +1,36 @@
-
+version: '3.8'
+services:
+  audio-system-project1a:
+    image: openjdk:17
+    container_name: "audio-system-project1a"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - rest-network
+    volumes:
+      - "./build/libs/project1a-1.0.0.jar:/app.jar"
+    command: [ 'java', '-jar', '/app.jar' ]
+  mongo:
+    image: mongo:7.0
+    container_name: "audio-system-mongo"
+    hostname: "audio-system-mongo"
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: tracks
+    volumes:
+      - ../data1:/data/db
+      - ./mongo-init/:/docker-entrypoint-initdb.d/:ro
+    ports:
+      - 27017:27017
+    networks:
+      - rest-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
